@@ -203,28 +203,32 @@ function CartDAO(database) {
               "items._id": 17
             },
 
-            { $set: { "items.quantity": 3} },
+            { $set: { "items.$.quantity": 3} },
 
-            { projection: { "items.$": 1, "items.quantity": 1 } 
-            }).limit(1);
+            { projection: { "items.$.quantity": 1} 
+            });
         */ 
+        var updateStatement = {}
+        if(quantity === 0){
+            updateStatement = { $pull: { items: { _id: itemId } } }
+        } else {
+            updateStatement = { $set: { "items.$.quantity": quantity} }
+        }
 
         this.db.collection('cart').findOneAndUpdate(
             { userId: userId,
               "items._id": itemId
             },
 
-            { $set: { "items.quantity": quantity} },
+            updateStatement,
 
-            { projection: { "items.quantity.$": 1, "items.quantity": 1 },
-              returnNewDocument: true 
-            },
+            { returnOriginal: false },
             function(err, result){
                 assert.equal(null, err);
-                console.log(result);
-                callback(result);
+                console.log(result.value);
+                callback(result.value);
             }
-        ).limit(1)
+        )
 
         // var userCart = {
         //     userId: userId,
